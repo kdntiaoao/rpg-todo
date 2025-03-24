@@ -1,55 +1,64 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Sword, Shield, Star, Trophy, AArrowDown as XP } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
+import { useState, useEffect } from "react";
+import {
+  Sword,
+  Shield,
+  Star,
+  Trophy,
+  AArrowDown as XP,
+  Scroll,
+  CheckCircle,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
 
 interface Quest {
   id: string;
   title: string;
   completed: boolean;
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty: "easy" | "medium" | "hard";
   exp: number;
 }
 
 export default function Home() {
   const [quests, setQuests] = useState<Quest[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('quests');
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("quests");
       return saved ? JSON.parse(saved) : [];
     }
     return [];
   });
-  const [newQuest, setNewQuest] = useState('');
+  const [newQuest, setNewQuest] = useState("");
   const [playerLevel, setPlayerLevel] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return Number(localStorage.getItem('playerLevel')) || 1;
+    if (typeof window !== "undefined") {
+      return Number(localStorage.getItem("playerLevel")) || 1;
     }
     return 1;
   });
   const [totalExp, setTotalExp] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return Number(localStorage.getItem('totalExp')) || 0;
+    if (typeof window !== "undefined") {
+      return Number(localStorage.getItem("totalExp")) || 0;
     }
     return 0;
   });
 
   useEffect(() => {
-    localStorage.setItem('quests', JSON.stringify(quests));
-    localStorage.setItem('playerLevel', String(playerLevel));
-    localStorage.setItem('totalExp', String(totalExp));
+    localStorage.setItem("quests", JSON.stringify(quests));
+    localStorage.setItem("playerLevel", String(playerLevel));
+    localStorage.setItem("totalExp", String(totalExp));
   }, [quests, playerLevel, totalExp]);
 
-  const addQuest = (difficulty: 'easy' | 'medium' | 'hard') => {
+  const addQuest = (difficulty: "easy" | "medium" | "hard") => {
     if (!newQuest.trim()) return;
-    
+
     const expValues = {
       easy: 10,
       medium: 20,
-      hard: 30
+      hard: 30,
     };
 
     const quest: Quest = {
@@ -57,15 +66,15 @@ export default function Home() {
       title: newQuest,
       completed: false,
       difficulty,
-      exp: expValues[difficulty]
+      exp: expValues[difficulty],
     };
 
     setQuests([...quests, quest]);
-    setNewQuest('');
+    setNewQuest("");
   };
 
   const completeQuest = (quest: Quest) => {
-    const newQuests = quests.map(q => 
+    const newQuests = quests.map((q) =>
       q.id === quest.id ? { ...q, completed: true } : q
     );
     setQuests(newQuests);
@@ -80,8 +89,53 @@ export default function Home() {
     }
   };
 
+  const activeQuests = quests.filter((quest) => !quest.completed);
+  const completedQuests = quests.filter((quest) => quest.completed);
   const expToNextLevel = 100 - (totalExp % 100);
   const progress = ((totalExp % 100) / 100) * 100;
+
+  const QuestCard = ({ quest }: { quest: Quest }) => (
+    <Card
+      key={quest.id}
+      className={`p-4 ${
+        quest.completed
+          ? "bg-slate-700/50 border-slate-600"
+          : "bg-slate-800 border-slate-700"
+      }`}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Sword
+            className={`w-5 h-5 ${
+              quest.difficulty === "easy"
+                ? "text-green-500"
+                : quest.difficulty === "medium"
+                ? "text-yellow-500"
+                : "text-red-500"
+            }`}
+          />
+          <span className={quest.completed ? "line-through text-gray-500" : ""}>
+            {quest.title}
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1">
+            <Star className="w-4 h-4 text-yellow-500" />
+            <span className="text-sm">{quest.exp} EXP</span>
+          </div>
+          {!quest.completed && (
+            <Button
+              onClick={() => completeQuest(quest)}
+              variant="outline"
+              className="bg-emerald-600 hover:bg-emerald-700 border-0"
+            >
+              Complete
+            </Button>
+          )}
+        </div>
+      </div>
+    </Card>
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-white p-8">
@@ -94,7 +148,9 @@ export default function Home() {
               <div className="flex items-center gap-2">
                 <XP className="w-4 h-4 text-green-400" />
                 <Progress value={progress} className="w-32 h-2" />
-                <span className="text-sm text-gray-300">{expToNextLevel} EXP to next level</span>
+                <span className="text-sm text-gray-300">
+                  {expToNextLevel} EXP to next level
+                </span>
               </div>
             </div>
           </div>
@@ -109,57 +165,72 @@ export default function Home() {
               placeholder="Enter new quest..."
               className="bg-slate-900 border-slate-700 text-white"
             />
-            <Button onClick={() => addQuest('easy')} variant="outline" className="bg-green-600 hover:bg-green-700 border-0">
+            <Button
+              onClick={() => addQuest("easy")}
+              variant="outline"
+              className="bg-green-600 hover:bg-green-700 border-0"
+            >
               Easy
             </Button>
-            <Button onClick={() => addQuest('medium')} variant="outline" className="bg-yellow-600 hover:bg-yellow-700 border-0">
+            <Button
+              onClick={() => addQuest("medium")}
+              variant="outline"
+              className="bg-yellow-600 hover:bg-yellow-700 border-0"
+            >
               Medium
             </Button>
-            <Button onClick={() => addQuest('hard')} variant="outline" className="bg-red-600 hover:bg-red-700 border-0">
+            <Button
+              onClick={() => addQuest("hard")}
+              variant="outline"
+              className="bg-red-600 hover:bg-red-700 border-0"
+            >
               Hard
             </Button>
           </div>
         </Card>
 
-        <div className="space-y-4">
-          {quests.map(quest => (
-            <Card
-              key={quest.id}
-              className={`p-4 ${
-                quest.completed
-                  ? 'bg-slate-700 border-slate-600'
-                  : 'bg-slate-800 border-slate-700'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Sword className={`w-5 h-5 ${
-                    quest.difficulty === 'easy' ? 'text-green-500' :
-                    quest.difficulty === 'medium' ? 'text-yellow-500' :
-                    'text-red-500'
-                  }`} />
-                  <span className={quest.completed ? 'line-through text-gray-500' : ''}>
-                    {quest.title}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1">
-                    <Star className="w-4 h-4 text-yellow-500" />
-                    <span className="text-sm">{quest.exp} EXP</span>
-                  </div>
-                  {!quest.completed && (
-                    <Button
-                      onClick={() => completeQuest(quest)}
-                      variant="outline"
-                      className="bg-emerald-600 hover:bg-emerald-700 border-0"
-                    >
-                      Complete
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </Card>
-          ))}
+        <div className="space-y-6">
+          {/* Active Quests Section */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <Scroll className="w-5 h-5 text-blue-400" />
+              <h3 className="text-lg font-semibold">
+                Active Quests ({activeQuests.length})
+              </h3>
+            </div>
+            <div className="space-y-3">
+              {activeQuests.map((quest) => (
+                <QuestCard key={quest.id} quest={quest} />
+              ))}
+              {activeQuests.length === 0 && (
+                <p className="text-gray-400 text-center py-4">
+                  No active quests. Time to add new adventures!
+                </p>
+              )}
+            </div>
+          </div>
+
+          <Separator className="bg-slate-700" />
+
+          {/* Completed Quests Section */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <CheckCircle className="w-5 h-5 text-green-400" />
+              <h3 className="text-lg font-semibold">
+                Completed Quests ({completedQuests.length})
+              </h3>
+            </div>
+            <div className="space-y-3">
+              {completedQuests.map((quest) => (
+                <QuestCard key={quest.id} quest={quest} />
+              ))}
+              {completedQuests.length === 0 && (
+                <p className="text-gray-400 text-center py-4">
+                  No completed quests yet. Keep going!
+                </p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
