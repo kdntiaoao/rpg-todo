@@ -99,8 +99,8 @@ export default function Home() {
       key={quest.id}
       className={`p-4 ${
         quest.completed
-          ? "bg-slate-700/50 border-slate-600"
-          : "bg-slate-800 border-slate-700"
+          ? "bg-slate-700/50 border-slate-600 text-white"
+          : "bg-slate-800 border-slate-700 text-white"
       }`}
     >
       <div className="flex items-center justify-between">
