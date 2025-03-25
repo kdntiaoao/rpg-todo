@@ -39,10 +39,10 @@ const QuestCard = ({
         : "bg-slate-800 border-slate-700 text-white"
     }`}
   >
-    <div className="flex items-center justify-between">
+    <div className="flex items-start flex-col gap-2 justify-between">
       <div className="flex items-center gap-3">
         <Sword
-          className={`w-5 h-5 ${
+          className={`w-5 h-5 shrink-0 ${
             quest.difficulty === "easy"
               ? "text-green-500"
               : quest.difficulty === "medium"
@@ -54,8 +54,8 @@ const QuestCard = ({
           {quest.title}
         </span>
       </div>
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-1">
+      <div className="flex items-center gap-3 self-end">
+        <div className="flex items-center gap-1 shrink-0">
           <Star className="w-4 h-4 text-yellow-500" />
           <span className="text-sm">{quest.exp} XP</span>
         </div>
@@ -163,34 +163,36 @@ export default function Home() {
         </div>
 
         <Card className="bg-slate-800 border-slate-700 p-4 mb-6">
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 items-end">
             <Input
               value={newQuest}
               onChange={(e) => setNewQuest(e.target.value)}
               placeholder="Enter new quest..."
               className="bg-slate-900 border-slate-700 text-white"
             />
-            <Button
-              onClick={() => addQuest("easy")}
-              variant="outline"
-              className="bg-green-600 hover:bg-green-700 border-0"
-            >
-              Easy
-            </Button>
-            <Button
-              onClick={() => addQuest("medium")}
-              variant="outline"
-              className="bg-yellow-600 hover:bg-yellow-700 border-0"
-            >
-              Medium
-            </Button>
-            <Button
-              onClick={() => addQuest("hard")}
-              variant="outline"
-              className="bg-red-600 hover:bg-red-700 border-0"
-            >
-              Hard
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => addQuest("easy")}
+                variant="outline"
+                className="bg-green-600 hover:bg-green-700 border-0"
+              >
+                Easy
+              </Button>
+              <Button
+                onClick={() => addQuest("medium")}
+                variant="outline"
+                className="bg-yellow-600 hover:bg-yellow-700 border-0"
+              >
+                Medium
+              </Button>
+              <Button
+                onClick={() => addQuest("hard")}
+                variant="outline"
+                className="bg-red-600 hover:bg-red-700 border-0"
+              >
+                Hard
+              </Button>
+            </div>
           </div>
         </Card>
 
