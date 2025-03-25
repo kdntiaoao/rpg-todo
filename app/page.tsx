@@ -153,10 +153,10 @@ export default function Home() {
               <div className="flex items-center gap-2">
                 <XP className="w-4 h-4 text-green-400" />
                 <Progress value={progress} className="w-32 h-2" />
-                <span className="text-sm text-gray-300">
-                  次のレベルまで {expToNextLevel} XP
-                </span>
               </div>
+              <span className="text-sm text-gray-300">
+                次のレベルまで {expToNextLevel} XP
+              </span>
             </div>
           </div>
           <Trophy className="w-8 h-8 text-yellow-500" />
