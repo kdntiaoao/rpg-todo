@@ -24,33 +24,86 @@ interface Quest {
   exp: number;
 }
 
-export default function Home() {
-  const [quests, setQuests] = useState<Quest[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("quests");
-      return saved ? JSON.parse(saved) : [];
-    }
-    return [];
-  });
-  const [newQuest, setNewQuest] = useState("");
-  const [playerLevel, setPlayerLevel] = useState(() => {
-    if (typeof window !== "undefined") {
-      return Number(localStorage.getItem("playerLevel")) || 1;
-    }
-    return 1;
-  });
-  const [totalExp, setTotalExp] = useState(() => {
-    if (typeof window !== "undefined") {
-      return Number(localStorage.getItem("totalExp")) || 0;
-    }
-    return 0;
-  });
+const QuestCard = ({
+  quest,
+  completeQuest,
+}: {
+  quest: Quest;
+  completeQuest: (quest: Quest) => void;
+}) => (
+  <Card
+    key={quest.id}
+    className={`p-4 ${
+      quest.completed
+        ? "bg-slate-700/50 border-slate-600 text-white"
+        : "bg-slate-800 border-slate-700 text-white"
+    }`}
+  >
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        <Sword
+          className={`w-5 h-5 ${
+            quest.difficulty === "easy"
+              ? "text-green-500"
+              : quest.difficulty === "medium"
+              ? "text-yellow-500"
+              : "text-red-500"
+          }`}
+        />
+        <span className={quest.completed ? "line-through text-gray-500" : ""}>
+          {quest.title}
+        </span>
+      </div>
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1">
+          <Star className="w-4 h-4 text-yellow-500" />
+          <span className="text-sm">{quest.exp} XP</span>
+        </div>
+        {!quest.completed && (
+          <Button
+            onClick={() => completeQuest(quest)}
+            variant="outline"
+            className="bg-emerald-600 hover:bg-emerald-700 border-0"
+          >
+            Complete
+          </Button>
+        )}
+      </div>
+    </div>
+  </Card>
+);
 
+export default function Home() {
+  const [quests, setQuests] = useState<Quest[]>([]);
+  const [newQuest, setNewQuest] = useState<string>("");
+  const [playerLevel, setPlayerLevel] = useState<number>(1);
+  const [totalExp, setTotalExp] = useState<number>(0);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  const activeQuests = quests.filter((quest) => !quest.completed);
+  const completedQuests = quests.filter((quest) => quest.completed);
+  const expToNextLevel = 100 - (totalExp % 100);
+  const progress = ((totalExp % 100) / 100) * 100;
+
+  // 初回のみローカルストレージからデータを読み込む
   useEffect(() => {
+    const savedQuests = localStorage.getItem("quests");
+    const savedPlayerLevel = localStorage.getItem("playerLevel");
+    const savedTotalExp = localStorage.getItem("totalExp");
+
+    setQuests(savedQuests ? JSON.parse(savedQuests) : []);
+    setPlayerLevel(savedPlayerLevel ? Number(savedPlayerLevel) : 1);
+    setTotalExp(savedTotalExp ? Number(savedTotalExp) : 0);
+    setIsLoaded(true);
+  }, []);
+
+  // データ更新時に保存
+  useEffect(() => {
+    if (!isLoaded) return;
     localStorage.setItem("quests", JSON.stringify(quests));
     localStorage.setItem("playerLevel", String(playerLevel));
     localStorage.setItem("totalExp", String(totalExp));
-  }, [quests, playerLevel, totalExp]);
+  }, [quests, playerLevel, totalExp, isLoaded]);
 
   const addQuest = (difficulty: "easy" | "medium" | "hard") => {
     if (!newQuest.trim()) return;
@@ -89,54 +142,6 @@ export default function Home() {
     }
   };
 
-  const activeQuests = quests.filter((quest) => !quest.completed);
-  const completedQuests = quests.filter((quest) => quest.completed);
-  const expToNextLevel = 100 - (totalExp % 100);
-  const progress = ((totalExp % 100) / 100) * 100;
-
-  const QuestCard = ({ quest }: { quest: Quest }) => (
-    <Card
-      key={quest.id}
-      className={`p-4 ${
-        quest.completed
-          ? "bg-slate-700/50 border-slate-600 text-white"
-          : "bg-slate-800 border-slate-700 text-white"
-      }`}
-    >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Sword
-            className={`w-5 h-5 ${
-              quest.difficulty === "easy"
-                ? "text-green-500"
-                : quest.difficulty === "medium"
-                ? "text-yellow-500"
-                : "text-red-500"
-            }`}
-          />
-          <span className={quest.completed ? "line-through text-gray-500" : ""}>
-            {quest.title}
-          </span>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1">
-            <Star className="w-4 h-4 text-yellow-500" />
-            <span className="text-sm">{quest.exp} EXP</span>
-          </div>
-          {!quest.completed && (
-            <Button
-              onClick={() => completeQuest(quest)}
-              variant="outline"
-              className="bg-emerald-600 hover:bg-emerald-700 border-0"
-            >
-              Complete
-            </Button>
-          )}
-        </div>
-      </div>
-    </Card>
-  );
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-white p-8">
       <div className="max-w-2xl mx-auto">
@@ -149,7 +154,7 @@ export default function Home() {
                 <XP className="w-4 h-4 text-green-400" />
                 <Progress value={progress} className="w-32 h-2" />
                 <span className="text-sm text-gray-300">
-                  {expToNextLevel} EXP to next level
+                  次のレベルまで {expToNextLevel} XP
                 </span>
               </div>
             </div>
@@ -190,21 +195,25 @@ export default function Home() {
         </Card>
 
         <div className="space-y-6">
-          {/* Active Quests Section */}
+          {/* 進行中のタスク Section */}
           <div>
             <div className="flex items-center gap-2 mb-4">
               <Scroll className="w-5 h-5 text-blue-400" />
               <h3 className="text-lg font-semibold">
-                Active Quests ({activeQuests.length})
+                進行中のタスク ({activeQuests.length})
               </h3>
             </div>
             <div className="space-y-3">
               {activeQuests.map((quest) => (
-                <QuestCard key={quest.id} quest={quest} />
+                <QuestCard
+                  key={quest.id}
+                  quest={quest}
+                  completeQuest={completeQuest}
+                />
               ))}
               {activeQuests.length === 0 && (
                 <p className="text-gray-400 text-center py-4">
-                  No active quests. Time to add new adventures!
+                  進行中のタスクはありません！
                 </p>
               )}
             </div>
@@ -212,21 +221,25 @@ export default function Home() {
 
           <Separator className="bg-slate-700" />
 
-          {/* Completed Quests Section */}
+          {/* 完了したタスク Section */}
           <div>
             <div className="flex items-center gap-2 mb-4">
               <CheckCircle className="w-5 h-5 text-green-400" />
               <h3 className="text-lg font-semibold">
-                Completed Quests ({completedQuests.length})
+                完了したタスク ({completedQuests.length})
               </h3>
             </div>
             <div className="space-y-3">
               {completedQuests.map((quest) => (
-                <QuestCard key={quest.id} quest={quest} />
+                <QuestCard
+                  key={quest.id}
+                  quest={quest}
+                  completeQuest={completeQuest}
+                />
               ))}
               {completedQuests.length === 0 && (
                 <p className="text-gray-400 text-center py-4">
-                  No completed quests yet. Keep going!
+                  完了したタスクはありません！
                 </p>
               )}
             </div>
